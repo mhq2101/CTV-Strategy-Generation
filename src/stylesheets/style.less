@@ -1,0 +1,84 @@
+@import "./colors";
+
+*[class^="ant-"] {
+  font-family: proximanova-light, serif;
+  font-weight: normal;
+}
+
+h1.ant-typography, h2.ant-typography, h3.ant-typography, h4.ant-typography {
+  font-weight: 300;
+}
+
+h1.ant-typography {
+  font-size: 38px;
+}
+
+h2.ant-typography {
+  font-size: 30px;
+}
+
+h3.ant-typography {
+  font-size: 24px;
+}
+
+h4.ant-typography {
+  font-size: 20px;
+}
+
+
+.anticon {
+  vertical-align: -0.18em;
+}
+
+.ant-dropdown-link {
+  color: @primary-color;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.ant-select-selection:hover {
+  border-color: @primary-color;
+}
+
+.ant-select-auto-complete .ant-select-selection__rendered {
+  height: 100%;
+  margin-right: 0;
+  margin-left: 0;
+  line-height: 32px;
+}
+
+.ant-select-selection__placeholder {
+  margin-left: 12px;
+}
+
+.ant-radio-inner {
+  box-sizing: border-box;
+}
+
+.ant-tooltip-inner {
+  box-sizing: border-box;
+}
+
+.ant-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.ant-transfer-list-header {
+  box-sizing: border-box;
+}
+
+.ant-transfer-list-content-item:not(.ant-transfer-list-content-item-disabled):hover {
+  box-sizing: border-box;
+}
+
+@font-face {
+  font-family: "proximanova-light";
+  src: url("https://s-static.innovid.com/resources/fonts/proximanova-light-webfont.woff2") format("woff2"),
+  url("https://s-static.innovid.com/resources/fonts/proximanova-light-webfont.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}

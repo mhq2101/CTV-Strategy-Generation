@@ -1,0 +1,27 @@
+.content-wrapper {
+  min-height: calc(100vh - 115px) !important;
+}
+.content-wrapper .main-content {
+  display: flex;
+  flex-direction: column;
+  padding: 39px 69px;
+  margin: 40px;
+  background-color: #fff;
+}
+@media (max-width: 768px) {
+  .content-wrapper .main-content {
+    padding: 0;
+    margin: 40px 0;
+  }
+}
+.content-wrapper .main-content-box {
+  border-radius: 7px;
+  box-shadow: 0 0 17px 1.2px rgba(0, 0, 0, 0.05);
+}
+@media (max-width: 768px) {
+  .content-wrapper .main-content-box {
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+/*# sourceMappingURL=Content.css.map */

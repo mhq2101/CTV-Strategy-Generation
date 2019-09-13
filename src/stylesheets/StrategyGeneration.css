@@ -1,0 +1,121 @@
+.app-container {
+    overflow: hidden;
+}
+
+.closeTogether .anticon-pause {
+    position: relative;
+    right: 3px;
+}
+
+#add-rule {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 100px;
+   
+}
+
+.not-in {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    align-items: center;
+}
+
+.parameters {
+    display: flex;
+    justify-content: center;
+
+}
+
+.parameter-values {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.operators {
+    display: flex;
+}
+
+.flex-space {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    height: 100%;
+    align-items: center;
+}
+
+.rule-close {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.parameter-title {
+    display: flex;
+    justify-content: space-between
+}
+
+.version-name {
+    display: flex;
+    align-items: center;
+
+}
+.current-unit-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+}
+
+.ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-extra {
+    float: right;
+    position: relative;
+    top: -32px;
+}
+
+.ant-collapse-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+.strategies {
+    display: flex;
+    justify-content: center
+}
+
+.campaign-edit {
+    width: 50%
+}
+
+.asset-list-item {
+
+
+}
+
+.ant-collapse-content-box {
+    width: 100%
+}
+
+.rules {
+    width: 100%
+}
+
+.ant-card .ant-card-bordered {
+    width: 90%
+}
+
+.options-container {
+    display: flex;
+    justify-content: space-evenly;
+    align-content: center;
+}
+
+.back {
+    float: right;
+    margin-bottom: 10px;
+}
