@@ -31,6 +31,7 @@
 .parameter-values {
     display: flex;
     justify-content: space-evenly;
+    flex-direction: column;
 }
 
 .operators {
@@ -60,6 +61,9 @@
 .version-name {
     display: flex;
     align-items: center;
+    display: flex;
+    width: 194px;
+    justify-content: space-between;
 
 }
 .current-unit-container {

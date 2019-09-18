@@ -23,7 +23,7 @@ const { SubMenu } = Menu;
 
 const StrategyGeneration = (props) => {
 
-    
+
     let defaultStrategies = [{
         version_id: "pending",
         version_name: "default",
@@ -33,6 +33,7 @@ const StrategyGeneration = (props) => {
     let defaultCampaign = null;
     let defaultAssetTypes = [];
     let defaultParameters = {};
+
 
     if (props.json) {
 
@@ -56,6 +57,7 @@ const StrategyGeneration = (props) => {
     const [activeOverride, setActiveOverride] = useState(0)
     const [modal, setModal] = useState(null)
     const [confirmLoading, setConfirmLoading] = useState(false)
+    const [assetField, setAssetField] = useState("")
 
     function handleDefineAssetTypes(type) {
         const assetTypesCopy = [...assetTypes];
@@ -72,9 +74,9 @@ const StrategyGeneration = (props) => {
         setStrategies(strategiesCopy)
         setAssetTypes(assetTypesCopy)
     }
-    
 
-    
+
+
 
     function addStrategyHandler() {
         const strategiesCopy = [...strategies]
@@ -104,22 +106,29 @@ const StrategyGeneration = (props) => {
 
         switch (operatorOne) {
             case "<":
+                comparisonValue = valueOne - 1
+                break;
             case "<=":
                 comparisonValue = valueOne - 1
+                break;
             case ">=":
+                comparisonValue = valueOne + 1
+                break;
             case ">":
+                comparisonValue = valueOne + 1
+                break;
             case "!=":
                 comparisonValue = valueOne + 1
-                   
+                break;
             case "=":
                 comparisonValue = valueOne;
         }
 
         switch (operatorTwo) {
             case "<":
-            if (comparisonValue >= valueTwo) {
-                return false
-            }
+                if (comparisonValue >= valueTwo) {
+                    return false
+                }
                 break;
             case "<=":
                 if (comparisonValue > valueTwo) {
@@ -127,12 +136,13 @@ const StrategyGeneration = (props) => {
                 }
                 break;
             case ">=":
-            if (comparisonValue < valueTwo) {
-                return false
-            }
+                if (comparisonValue < valueTwo) {
+                    return false
+                }
                 break;
             case ">":
                 if (comparisonValue <= valueTwo) {
+                    console.log(comparisonValue, valueTwo)
                     return false;
                 }
                 break;
@@ -146,9 +156,8 @@ const StrategyGeneration = (props) => {
                     return false
                 }
                 break;
-                
-        }
 
+        }
         return true;
 
     }
@@ -168,20 +177,23 @@ const StrategyGeneration = (props) => {
             case "<":
             case "<=":
                 comparisonValue = new Date(new Date(valueOne).getTime() - (60 * 1000));
+                break;
             case ">=":
             case ">":
             case "!=":
                 comparisonValue = new Date(new Date(valueOne).getTime() + (60 * 1000));
-                   
+                break;
+
             case "=":
                 comparisonValue = new Date(valueOne);
+                break;
         }
 
         switch (operatorTwo) {
             case "<":
-            if (comparisonValue >= valueTwo) {
-                return false
-            }
+                if (comparisonValue >= valueTwo) {
+                    return false
+                }
                 break;
             case "<=":
                 if (comparisonValue > valueTwo) {
@@ -189,9 +201,9 @@ const StrategyGeneration = (props) => {
                 }
                 break;
             case ">=":
-            if (comparisonValue < valueTwo) {
-                return false
-            }
+                if (comparisonValue < valueTwo) {
+                    return false
+                }
                 break;
             case ">":
                 if (comparisonValue <= valueTwo) {
@@ -208,14 +220,15 @@ const StrategyGeneration = (props) => {
                     return false
                 }
                 break;
-                
+
         }
 
         return true;
 
     }
 
-    
+
+
 
     function dateValidate(arr) {
         const operatorOne = arr[0][0]
@@ -228,20 +241,23 @@ const StrategyGeneration = (props) => {
             case "<":
             case "<=":
                 comparisonValue = new Date(new Date(valueOne).getTime() - 60 * 60 * 24 * 1000);
+                break;
             case ">=":
             case ">":
             case "!=":
                 comparisonValue = new Date(new Date(valueOne).getTime() + 60 * 60 * 24 * 1000);
-                   
+                break;
+
             case "=":
                 comparisonValue = new Date(valueOne);
+                break;
         }
 
         switch (operatorTwo) {
             case "<":
-            if (comparisonValue >= valueTwo) {
-                return false
-            }
+                if (comparisonValue >= valueTwo) {
+                    return false
+                }
                 break;
             case "<=":
                 if (comparisonValue > valueTwo) {
@@ -249,9 +265,9 @@ const StrategyGeneration = (props) => {
                 }
                 break;
             case ">=":
-            if (comparisonValue < valueTwo) {
-                return false
-            }
+                if (comparisonValue < valueTwo) {
+                    return false
+                }
                 break;
             case ">":
                 if (comparisonValue <= valueTwo) {
@@ -268,7 +284,7 @@ const StrategyGeneration = (props) => {
                     return false
                 }
                 break;
-                
+
         }
 
         return true;
@@ -295,30 +311,27 @@ const StrategyGeneration = (props) => {
 
             }
             if (strategy["version_name"].indexOf("default") < 0) {
-                for(const [ruleIndex, rule] of strategy.rules.entries()) {
-                    for(const parameter of Object.keys(rule)) {
-                        if (rule[parameter].length > 2) {
-                            tempErrors.push(`More than 2 rules prohibited - Version: ${strategy["version_name"]}, Rule: ${ruleIndex + 1}, Parameter: ${parameter}`)
-                        }
+                for (const [ruleIndex, rule] of strategy.rules.entries()) {
+                    for (const parameter of Object.keys(rule)) {
                         if (rule[parameter].length == 2) {
                             switch (parameter) {
-                                case "date": 
+                                case "date":
                                     if (!dateValidate(rule[parameter])) {
                                         tempErrors.push(`Invalid Date Range - Version: ${strategy["version_name"]}, Rule: ${ruleIndex + 1}`)
-                                    } 
+                                    }
                                     break;
                                 case "time":
                                     if (!timeValidate(rule[parameter])) {
                                         tempErrors.push(`Invalid Time Range - Version: ${strategy["version_name"]}, Rule: ${ruleIndex + 1}`)
-                                    } 
+                                    }
                                     break;
                                 case "temperature":
                                     if (!temperatureValidate(rule[parameter])) {
                                         tempErrors.push(`Invalid Temperature Range - Version: ${strategy["version_name"]}, Rule: ${ruleIndex + 1}`)
-                                    } 
+                                    }
                                     break;
                             }
-                            
+
                         }
                         let emptyError = false
                         for (const parameterValue of rule[parameter]) {
@@ -538,6 +551,7 @@ const StrategyGeneration = (props) => {
         }
         axios.post(`http://services.innovid.com/strategyUpload?hash=${hash}`, fullJson)
             .then(response => {
+                console.log(response)
                 setConfirmLoading(false)
                 setUrlResponse(response.data.message)
 
@@ -610,10 +624,8 @@ const StrategyGeneration = (props) => {
                         title="Title"
                         visible={modal}
                         onOk={modalErrorHandler}
-                        // confirmLoading={confirmLoading}
                         onCancel={modalErrorHandler}
                         okButtonProps={{ disabled: true }}
-                    // cancelButtonProps={{ disabled: true }}
                     >
                         <ul>
                             {modal["errors"].map(error => {
@@ -660,35 +672,33 @@ const StrategyGeneration = (props) => {
                     </Modal>
                 )
             }
+
+            else if (modal["warning"]) {
+                return (
+                    <Modal
+                        title="Title"
+                        visible={modal}
+                        onOk={() => {
+                            modal["onOk"](...modal["params"])
+                        }}
+                        onCancel={() => { setModal(null) }}
+                    >
+                        <ul>
+                            {modal["warnings"].map(warning => {
+                                return <li>{warning}</li>
+                            })}
+                        </ul>
+                    </Modal>
+                )
+            }
         }
 
     }
 
-    const uploadProps = {
-        name: 'file',
-        action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
-        headers: {
-            authorization: 'authorization-text',
-        },
-        onChange(info) {
-            if (info.file.status !== 'uploading') {
+    const assetProps = {
 
-            }
-            if (info.file.status === 'done') {
-                message.success(`${info.file.name} file uploaded successfully`);
-                let fileReader = new FileReader();
-                fileReader.onloadend = (file) => {
-                    console.log(fileReader.result)
-                    setParameters(JSON.parse(fileReader.result).parameters)
-                    setAssetTypes(Object.keys(JSON.parse(fileReader.result).decisioning[0].assets))
-                    setStrategies(JSON.parse(fileReader.result).decisioning)
-                }
-                fileReader.readAsText(info.file.originFileObj)
-            } else if (info.file.status === 'error') {
-                message.error(`${info.file.name} file upload failed.`);
-            }
-        },
-    };
+
+    }
 
     const [plus, setPlus] = useState("")
 
@@ -704,28 +714,51 @@ const StrategyGeneration = (props) => {
             {
                 <div><List
                     header={<div>Define Your Asset Types Here</div>}
-                    footer={<div><Search placeholder="Add A New Asset Type" onSearch={(value) => { handleDefineAssetTypes(value) }} enterButton="Submit"></Search></div>}
+                    footer={<div><Search value={assetField} placeholder="Add A New Asset Type" onChange={(e) => {
+                        setAssetField(e.target.value)
+                    }} onSearch={(value) => {
+                        if (assetTypes.indexOf(value) >= 0) {
+                            setModal({
+                                errors: ["all asset types must be unique"]
+                            })
+                            setAssetField("")
+                        }
+                        else {
+                            handleDefineAssetTypes(value)
+                            setAssetField("")
+                        }
+
+                    }} enterButton="Submit"></Search></div>}
                     bordered
                     dataSource={assetTypes}
                     renderItem={(item, index) => (
                         <List.Item>
                             <div className="asset-list-item"><Typography.Text >[{index + 1}]</Typography.Text> {item} <Button onClick={() => {
-                                const assetTypesCopy = [...assetTypes];
-                                const strategiesCopy = [...strategies];
-                                for (const strategy of strategiesCopy) {
-                                    for (const type of assetTypesCopy) {
-                                        delete strategy.assets[assetTypesCopy[index]]
+                                setModal({
+                                    warning: 1,
+                                    onOk: (index) => {
+                                        const assetTypesCopy = [...assetTypes];
+                                        const strategiesCopy = [...strategies];
+                                        for (const strategy of strategiesCopy) {
+                                            for (const type of assetTypesCopy) {
+                                                delete strategy.assets[assetTypesCopy[index]]
 
-                                    }
-                                }
-                                delete assetTypesCopy[index]
-                                var newAssetTypes = assetTypesCopy.filter(value => {
-                                    if (value) {
-                                        return true;
-                                    }
+                                            }
+                                        }
+                                        delete assetTypesCopy[index]
+                                        var newAssetTypes = assetTypesCopy.filter(value => {
+                                            if (value) {
+                                                return true;
+                                            }
+                                        })
+                                        setStrategies(strategiesCopy)
+                                        setAssetTypes(newAssetTypes)
+                                        setModal(null)
+                                    },
+                                    params: [index],
+                                    warnings: ["Warning! Deleting the asset type, " + assetTypes[index] + " will delete it for all versions. Are you sure you want to continue?"]
                                 })
-                                setStrategies(strategiesCopy)
-                                setAssetTypes(newAssetTypes)
+
                             }}><Icon type="close" /></Button></div>
                         </List.Item>
                     )}
@@ -741,9 +774,9 @@ const StrategyGeneration = (props) => {
                                 return (
                                     <Panel key={strategyIndex} header={<div onClick={() => {
                                         setActiveOverride(strategyIndex)
-                                    }} className="flex-space"><div>Version ID: {strategy["version_id"]}</div><div>{strategy["editingName"] ? (<Search onSearch={(value) => { handleChangeVersionName(strategyIndex, value) }} enterButton="change"></Search>) : <div className="version-name"><div>Version Name: {strategy["version_name"]}</div><div><Button onClick={() => { editStrategyName(strategyIndex) }}>Edit</Button></div></div>} </div> <div><Button onClick={() => {
+                                    }} className="flex-space"><div>Version ID: {strategy["version_id"]}</div><div>{strategy["editingName"] ? (<Search onSearch={(value) => { handleChangeVersionName(strategyIndex, value) }} enterButton="change"></Search>) : <div className="version-name"><div>Version Name: {strategy["version_name"]}</div><div><Button disabled={(strategy["version_name"].indexOf("default") >= 0)} onClick={() => { editStrategyName(strategyIndex) }}>Edit</Button></div></div>} </div> <div><Button onClick={() => {
                                         addSubRule(strategyIndex)
-                                    }} disabled={(strategy["version_name"].indexOf("default") >= 0)}><Icon type="plus" /></Button> <Button onClick={() => {
+                                    }} disabled={(strategy["version_name"].indexOf("default") >= 0)}>Add Sub-Rule<Icon type="plus" /></Button> <Button disabled={(strategy["version_name"].indexOf("default") >= 0)} onClick={() => {
                                         removeStrategyHandler(strategyIndex)
                                     }} ><Icon type="close" /></Button></div> </div>} key={strategyIndex}>
                                         <div className="current-unit-container">
@@ -788,9 +821,9 @@ const StrategyGeneration = (props) => {
                                                                 <div className="parameters">
                                                                     <Card title={<div className="parameter-title">{param} <div><Button onClick={() => {
                                                                         addRuleToParameter(strategyIndex, ruleIndex, param)
-                                                                    }}>Add Parameter Rule<Icon type="plus" /></Button> <Button onClick={() => {
+                                                                    }} disabled={(param != "zip" && param != "dma" && rule[param].length > 1) || rule[param][rule[param].length - 1][0] == "="}>Add Parameter Rule<Icon type="plus" /></Button> <Button onClick={() => {
                                                                         removeSubRuleHandler(strategyIndex, ruleIndex, param)
-                                                                      
+
                                                                     }} ><Icon type="close" /></Button></div></div>} style={{ width: "90%" }}>
                                                                         {rule[param].map((paramDefinition, definitionIndex) => {
                                                                             switch (param) {
@@ -879,12 +912,52 @@ const StrategyGeneration = (props) => {
                                         </div>
                                         <Divider />
                                         <div>assets: {Object.keys(strategy["assets"]).map(assetType => {
-                                            return (<div className="not-in">
-                                                {assetType}: {<Input onChange={(e) => {
+                                            return (<div>
+                                                <div>{assetType}:</div> {<div><div><Input onChange={(e) => {
                                                     const strategiesCopy = [...strategies];
                                                     strategiesCopy[strategyIndex]["assets"][assetType] = e.target.value
                                                     setStrategies(strategiesCopy)
-                                                }} defaultValue={strategy.assets[assetType]}></Input>}
+                                                }} value={strategy.assets[assetType]}></Input></div><div><Upload name="file"
+                                                    listType="picture"
+                                                    fileList={strategy.assets[assetType] && assetType != "text2mobile" ? [{
+                                                        uid: '-1',
+                                                        name: assetType + '.png',
+                                                        status: 'done',
+                                                        url: strategy.assets[assetType] ? strategy.assets[assetType] : ""
+                                                    }] : null}
+                                                    onRemove={() => {
+                                                        const strategiesCopy = [...strategies];
+                                                        strategiesCopy[strategyIndex]["assets"][assetType] = "";
+                                                        setStrategies(strategiesCopy)
+                                                    }}
+                                                    onChange={(info) => {
+                                                        if (info.file.status === 'error') {
+                                                            message.error(`${info.file.name} file upload failed.`);
+                                                        }
+                                                        else {
+                                                            var formData = new FormData()
+                                                            formData.append('file', info.file.originFileObj);
+                                                            axios.post('http://services.innovid.com/uploadAsset', formData, {
+                                                                headers: {
+                                                                    'Content-Type': 'multipart/form-data'
+                                                                }
+                                                            })
+                                                                .then(({ data }) => {
+                                                                    const location = data.message
+                                                                    console.log(location)
+                                                                    const strategiesCopy = [...strategies];
+                                                                    strategiesCopy[strategyIndex]["assets"][assetType] = location
+                                                                    setStrategies(strategiesCopy)
+                                                                })
+                                                        }
+
+
+                                                    }} multiple={false}>
+                                                    <Button>
+                                                        <Icon type="upload" /> Upload
+                                                </Button>
+                                                </Upload> </div></div>}
+
                                             </div>)
                                         })}</div>
                                     </Panel>)
