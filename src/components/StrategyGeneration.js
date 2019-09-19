@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { connect } from "react-redux"
 import '../stylesheets/StrategyGeneration.css';
 import { } from '../redux/index'
-import { Icon, Button, Divider, Popover, Collapse, Card, Select, DatePicker, InputNumber, TimePicker, Menu, Upload, message, List, Typography, Form, Modal } from 'antd';
+import { Icon, Button, Divider, Tag, Popover, Collapse, Card, Select, DatePicker, InputNumber, TimePicker, Menu, Upload, message, List, Typography, Form, Modal } from 'antd';
 import AllOperators from "./AllOperators.js"
 import { Input } from 'antd';
 import moment from 'moment';
@@ -708,13 +708,14 @@ const StrategyGeneration = (props) => {
 
         <div className="app-container">
             {showModal(modal)}
-            <Divider />
             {!campaign ? (<div className="campaign-edit"><Search placeholder="Enter The Campaign ID" onSearch={(value) => { setCampaign(value) }} enterButton="Submit"></Search></div>) : <div className="version-name"><div>Campaign: {campaign}</div><div><Button onClick={() => { setCampaign(null) }}>Edit</Button></div></div>}
-            <Divider />
             {
-                <div><List
-                    header={<div>Define Your Asset Types Here</div>}
-                    footer={<div><Search value={assetField} placeholder="Add A New Asset Type" onChange={(e) => {
+                <div className="asset-types-container"><Card
+                    
+                    bordered
+                    
+                >
+                {<div className="asset-types-title"><h4>Define Your Asset Types Here</h4><div><Search value={assetField} placeholder="Add A New Asset Type" onChange={(e) => {
                         setAssetField(e.target.value)
                     }} onSearch={(value) => {
                         if (assetTypes.indexOf(value) >= 0) {
@@ -728,41 +729,43 @@ const StrategyGeneration = (props) => {
                             setAssetField("")
                         }
 
-                    }} enterButton="Submit"></Search></div>}
-                    bordered
-                    dataSource={assetTypes}
-                    renderItem={(item, index) => (
-                        <List.Item>
-                            <div className="asset-list-item"><Typography.Text >[{index + 1}]</Typography.Text> {item} <Button onClick={() => {
-                                setModal({
-                                    warning: 1,
-                                    onOk: (index) => {
-                                        const assetTypesCopy = [...assetTypes];
-                                        const strategiesCopy = [...strategies];
-                                        for (const strategy of strategiesCopy) {
-                                            for (const type of assetTypesCopy) {
-                                                delete strategy.assets[assetTypesCopy[index]]
+                    }} enterButton="Submit"></Search></div></div>}
+                
+                <div className="asset-items-container" >{assetTypes.map((item, index) => (
 
-                                            }
+                        <Tag color="#03c6d2" closable onClose={(e) => {
+                            e.preventDefault();
+                            setModal({
+                                warning: 1,
+                                onOk: (index) => {
+                                    const assetTypesCopy = [...assetTypes];
+                                    const strategiesCopy = [...strategies];
+                                    for (const strategy of strategiesCopy) {
+                                        for (const type of assetTypesCopy) {
+                                            delete strategy.assets[assetTypesCopy[index]]
+
                                         }
-                                        delete assetTypesCopy[index]
-                                        var newAssetTypes = assetTypesCopy.filter(value => {
-                                            if (value) {
-                                                return true;
-                                            }
-                                        })
-                                        setStrategies(strategiesCopy)
-                                        setAssetTypes(newAssetTypes)
-                                        setModal(null)
-                                    },
-                                    params: [index],
-                                    warnings: ["Warning! Deleting the asset type, " + assetTypes[index] + " will delete it for all versions. Are you sure you want to continue?"]
-                                })
+                                    }
+                                    delete assetTypesCopy[index]
+                                    var newAssetTypes = assetTypesCopy.filter(value => {
+                                        if (value) {
+                                            return true;
+                                        }
+                                    })
+                                    setStrategies(strategiesCopy)
+                                    setAssetTypes(newAssetTypes)
+                                    setModal(null)
+                                },
+                                params: [index],
+                                warnings: [<div>"Warning! Deleting the asset type " + <strong>{assetTypes[index]}</strong> + " will delete the asset type for all versions. Are you sure you want to continue?"</div>]
+                            })
 
-                            }}><Icon type="close" /></Button></div>
-                        </List.Item>
-                    )}
-                /></div>
+                        }}>
+                            {item}
+
+                        </Tag>
+                    )) }</div>
+                </Card></div>
 
             }
 
@@ -776,24 +779,31 @@ const StrategyGeneration = (props) => {
                                         setActiveOverride(strategyIndex)
                                     }} className="flex-space"><div>Version ID: {strategy["version_id"]}</div><div>{strategy["editingName"] ? (<Search onSearch={(value) => { handleChangeVersionName(strategyIndex, value) }} enterButton="change"></Search>) : <div className="version-name"><div>Version Name: {strategy["version_name"]}</div><div><Button disabled={(strategy["version_name"].indexOf("default") >= 0)} onClick={() => { editStrategyName(strategyIndex) }}>Edit</Button></div></div>} </div> <div><Button onClick={() => {
                                         addSubRule(strategyIndex)
-                                    }} disabled={(strategy["version_name"].indexOf("default") >= 0)}>Add Sub-Rule<Icon type="plus" /></Button> <Button disabled={(strategy["version_name"].indexOf("default") >= 0)} onClick={() => {
+                                    }} disabled={(strategy["version_name"].indexOf("default") >= 0)}>Add Rule<Icon type="plus" /></Button> <Button disabled={(strategy["version_name"].indexOf("default") >= 0)} onClick={() => {
                                         removeStrategyHandler(strategyIndex)
                                     }} ><Icon type="close" /></Button></div> </div>} key={strategyIndex}>
                                         <div className="current-unit-container">
+                                            <h2>Rules</h2>
                                             {
                                                 strategy.rules && strategy.rules.map((rule, ruleIndex) => {
-                                                    return (<div className="rules"><Card style={{ width: "90%" }}><div className="rule-close"><div><Menu multiple={true} onSelect={({ key }) => {
+                                                    return (<div className="rules"><Card style={{ width: "100%" }}> <div className="rule-close"> <h3> 
+                                                    Rule {ruleIndex + 1}
+                                                </h3><div className=""><Button onClick={() => {
+                                                        removeRuleHandler(strategyIndex, ruleIndex)
+                                                    }} ><Icon type="close" /></Button></div></div>
+                                                    <div><Menu multiple={true} onSelect={({ key }) => {
                                                         addSubRuleParameter(strategyIndex, ruleIndex, key)
                                                     }} onDeselect={({ key }) => {
                                                         addSubRuleParameter(strategyIndex, ruleIndex, key)
                                                     }} style={{ width: 256 }} mode="vertical">
                                                         <SubMenu
                                                             key="sub1"
-                                                            title={
+                                                            title={<div>
                                                                 <span>
                                                                     <Icon type="plus" />
                                                                     <span>Add Parameter</span>
                                                                 </span>
+                                                                </div>
                                                             }
                                                         >
                                                             <Menu.ItemGroup title="Weather">
@@ -813,18 +823,16 @@ const StrategyGeneration = (props) => {
 
                                                             </Menu.ItemGroup>
                                                         </SubMenu>
-                                                    </Menu></div><div><Button onClick={() => {
-                                                        removeRuleHandler(strategyIndex, ruleIndex)
-                                                    }} ><Icon type="close" /></Button></div></div>
-                                                        {Object.keys(rule).map((param, paramIndex) => {
+                                                    </Menu></div>
+                                                        <div className="rules">{Object.keys(rule).map((param, paramIndex) => {
                                                             return (
                                                                 <div className="parameters">
-                                                                    <Card title={<div className="parameter-title">{param} <div><Button onClick={() => {
+                                                                    <Card title={<div className="parameter-title">{param} <div className="condition-add-close"><Button onClick={() => {
                                                                         addRuleToParameter(strategyIndex, ruleIndex, param)
-                                                                    }} disabled={(param != "zip" && param != "dma" && rule[param].length > 1) || rule[param][rule[param].length - 1][0] == "="}>Add Parameter Rule<Icon type="plus" /></Button> <Button onClick={() => {
+                                                                    }} disabled={(param != "zip" && param != "dma" && rule[param].length > 1) || rule[param][rule[param].length - 1][0] == "="}>Add Condition<Icon type="plus" /></Button> <Button onClick={() => {
                                                                         removeSubRuleHandler(strategyIndex, ruleIndex, param)
 
-                                                                    }} ><Icon type="close" /></Button></div></div>} style={{ width: "90%" }}>
+                                                                    }} ><Icon type="close" /></Button></div></div>}>
                                                                         {rule[param].map((paramDefinition, definitionIndex) => {
                                                                             switch (param) {
                                                                                 case "temperature":
@@ -902,7 +910,7 @@ const StrategyGeneration = (props) => {
                                                                     </Card>
                                                                 </div>
                                                             )
-                                                        })}
+                                                        })}</div>
                                                     </Card>
                                                         {ruleIndex < strategy.rules.length - 1 ? <div> OR </div> : <div></div>}
                                                     </div>
@@ -911,17 +919,18 @@ const StrategyGeneration = (props) => {
                                             }
                                         </div>
                                         <Divider />
-                                        <div>assets: {Object.keys(strategy["assets"]).map(assetType => {
-                                            return (<div>
-                                                <div>{assetType}:</div> {<div><div><Input onChange={(e) => {
+                                        <div className="asset-container"><h2>Assets</h2> {Object.keys(strategy["assets"]).map(assetType => {
+                                            return (<div className="asset-item">
+                                                <div className="assetType-header">{assetType}:</div> {<div className="asset-input"><div className="asset-input-field"><Input placeholder="Enter a URL or upload an asset" 
+                                                onChange={(e) => {
                                                     const strategiesCopy = [...strategies];
                                                     strategiesCopy[strategyIndex]["assets"][assetType] = e.target.value
                                                     setStrategies(strategiesCopy)
-                                                }} value={strategy.assets[assetType]}></Input></div><div><Upload name="file"
+                                                }} value={strategy.assets[assetType]}></Input></div><div className="uploader"><Upload name="file"
                                                     listType="picture"
                                                     fileList={strategy.assets[assetType] && assetType != "text2mobile" ? [{
                                                         uid: '-1',
-                                                        name: assetType + '.png',
+                                                        name: "" ,
                                                         status: 'done',
                                                         url: strategy.assets[assetType] ? strategy.assets[assetType] : ""
                                                     }] : null}
