@@ -16,11 +16,12 @@
    
 }
 
-.not-in {
+.submit-strategy {
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-end;
     text-align: center;
     align-items: center;
+    
 }
 
 .parameters {
@@ -148,8 +149,23 @@
 
 .options-container {
     display: flex;
-    justify-content: space-evenly;
+    justify-content: flex-start;
     align-content: center;
+}
+
+.strategy-hash-input {
+    display: flex
+}
+
+.create-new {
+    position: relative;
+    top: 4px;
+    padding-right: 20px;
+
+}
+
+.submit-strategy-hash {
+    padding-left: 10px
 }
 
 .back {
@@ -181,6 +197,10 @@
 
 .uploader span {
     display: flex;
+}
+
+.uploader {
+    margin-left: 10px
 }
 
 .asset-input {
@@ -228,3 +248,23 @@
     bottom: 20px;
     left: 10px;
 }
+
+.campaign-enter {
+    align-items: center;
+    display: flex;
+    justify-content: flex-start;
+    padding-bottom: 20px
+}
+
+.campaign-id {
+    padding-right: 10px
+}
+
+
+/* .ant-card-head {
+    font-size: 14px !important
+}
+
+.ant-btn {
+    font-size: 12px !important
+} */

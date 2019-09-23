@@ -8,19 +8,30 @@ import axios from "axios"
 
 
 const Home = (props) => {
-
     const [createStrategy, setCreateStrategy] = useState(false)
     const [existingStrategy, setExistingStrategy] = useState(false)
     const [json, setJson] = useState(null)
-
+    const [tempJson, setTempJson] = useState(null)
     const [validateMessage, setValidateMessage] = useState("")
     const [timeout, setTheTimeout] = useState(0);
     const [hashValidate, setHashValidate] = useState("")
+
+    useEffect(() => {
+        if (sessionStorage.getItem("innovid-smart-strategy")) {
+            const temp = JSON.parse(sessionStorage.getItem("innovid-smart-strategy"))
+            console.log(temp)
+            setTempJson({...temp})
+            setJson({...temp})
+            setCreateStrategy(true);
+        }
+    }, []);
 
     function validateDatabasHash(e) {
         if (e.target.value === "" || e.target.value.length <= 2) {
             setHashValidate("")
             setValidateMessage("")
+            setTempJson(null)
+            setJson(null)
         }
         else {
             e.persist()
@@ -28,17 +39,35 @@ const Home = (props) => {
             setValidateMessage('Validating the Hash')
             clearTimeout(timeout)
             setTheTimeout(setTimeout(function () {
-                axios.get("http://services.innovid.com/getStrategy?hash=" + e.target.value)
+                let hash = "";
+                let url = false;
+                if (e.target.value.indexOf("?hash=")) {
+                    const index = e.target.value.indexOf("?hash=")
+                    hash = e.target.value.substring(index+6, index+12);
+                    url = true
+                }
+                else {
+                    hash = e.target.value
+                }
+
+                axios.get("http://services.innovid.com/getStrategy?hash=" + hash)
                     .then(({ data }) => {
                         if (data.status == "success") {
-                            setJson(data.json)
+                            const newJson = {...data.json}
+                            newJson.strategyHash = e.target.value
+                            setTempJson(newJson)
                             setHashValidate("success")
-                            setValidateMessage("Hash Validated. Click Submit to View")
+                            if (url) {
+                                setValidateMessage("URL Validated. Click Submit to View")
+                            }
+                            else {
+                                setValidateMessage("Hash Validated. Click Submit to View")
+                            }
+                            
                         }
                         else {
                             setHashValidate("error")
                             setValidateMessage("No configuration file found. Please enter a valid hash")
-
                         }
                     })
                     .catch(err => {
@@ -48,39 +77,41 @@ const Home = (props) => {
 
             }, 500));
         }
-
     }
 
     const options = () => {
         return (
             <div className="options-container">
-                <div><Button onClick={()=> {
+                <div className="create-new"><Button onClick={()=> {
                     setCreateStrategy(true)
                 }}>Create New Strategy</Button></div>
-                <div> or </div>
-                <div><Form.Item
-                    label="Enter a Strategy Hash to import an existing strategy"
+                <div className="strategy-hash-input"><Form.Item
+                    label=" or Enter a Strategy Hash or Dynamic URL to import an existing strategy"
                     hasFeedback
                     validateStatus={hashValidate}
                     help={validateMessage}
                 >
-                    <Input placeholder="" id="error" onChange={(e) => {
+                    <Input size={30} placeholder="" id="error" onChange={(e) => {
                         validateDatabasHash(e)
                     }} />
-                </Form.Item><Button disabled={!json} onClick={()=> {
+                </Form.Item><div className="submit-strategy-hash"><Button style={{"position": "relative", "top": "4px"}} disabled={!tempJson} onClick={()=> {
                     setCreateStrategy(true)
-                }}>Submit</Button> </div>
-                </div>
-
-                
+                    setJson({...tempJson})
+                    setHashValidate("")
+                    setValidateMessage("")
+                }}>Submit</Button></div></div>
+                </div>                
         )
     }
 
 
     return (
-
         <div >
-            {createStrategy ? <div className="back"><Button onClick={()=> {setCreateStrategy(false)}}>Back</Button></div> : <div></div>}
+            {createStrategy ? <div className="back"><Button onClick={()=> {setCreateStrategy(false) 
+                setTempJson(null)
+                setJson(null)
+                sessionStorage.removeItem("innovid-smart-strategy");
+                }}>Start Over</Button></div> : <div></div>}
             <Divider/>
             {createStrategy ? <StrategyGeneration json={json}/> : options()}
         </div>
@@ -89,8 +120,7 @@ const Home = (props) => {
 
 const mapStateToProps = (state) => {
     return {
-        auth: state.auth,
-
+        auth: state.auth
     }
 }
 

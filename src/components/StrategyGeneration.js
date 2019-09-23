@@ -2,28 +2,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { connect } from "react-redux"
 import '../stylesheets/StrategyGeneration.css';
 import { } from '../redux/index'
-import { Icon, Button, Divider, Tag, Popover, Collapse, Card, Select, DatePicker, InputNumber, TimePicker, Menu, Upload, message, List, Typography, Form, Modal } from 'antd';
+import { Icon, Button, Divider, Tag, Popover, Collapse, Card, Select, DatePicker, InputNumber, TimePicker, Menu, Upload, message, List, Typography, Form, Modal, Table } from 'antd';
 import AllOperators from "./AllOperators.js"
 import { Input } from 'antd';
 import moment from 'moment';
 import axios from "axios";
 import randomstring from "randomstring";
+import copy from 'clipboard-copy';
 const InputGroup = Input.Group;
 const { Search } = Input;
 const { Panel } = Collapse
 const { Option } = Select;
-
-
-
 const { SubMenu } = Menu;
 
-
-
-
-
 const StrategyGeneration = (props) => {
-
-
     let defaultStrategies = [{
         version_id: "pending",
         version_name: "default",
@@ -33,17 +25,24 @@ const StrategyGeneration = (props) => {
     let defaultCampaign = null;
     let defaultAssetTypes = [];
     let defaultParameters = {};
-
+    let defaultStrategyHash = randomstring.generate(6)
+    let defaultOverwritable = false;
 
     if (props.json) {
-
         defaultStrategies = props.json.decisioning
         defaultParameters = props.json.parameters
-        defaultAssetTypes = Object.keys(props.json.decisioning[0].assets)
+        if (props.json.decisioning[0]) {
+            defaultAssetTypes = Object.keys(props.json.decisioning[0].assets)
+        }
         if (props.json.campaign) {
             defaultCampaign = props.json.campaign
         }
+        if (props.json.strategyHash) {
+            defaultStrategyHash = props.json.strategyHash
+            defaultOverwritable = true
+        }
     }
+
 
     const [parameters, setParameters] = useState(defaultParameters)
     const [validateMessage, setValidateMessage] = useState("")
@@ -51,13 +50,50 @@ const StrategyGeneration = (props) => {
     const [hashValidate, setHashValidate] = useState("")
     const [urlResponse, setUrlResponse] = useState(null)
     const [campaign, setCampaign] = useState(defaultCampaign)
-    const [databaseHash, setDatabaseHash] = useState("")
+    const [strategyHash, setStrategyHash] = useState(defaultStrategyHash)
     const [assetTypes, setAssetTypes] = useState(defaultAssetTypes)
     const [strategies, setStrategies] = useState(defaultStrategies)
     const [activeOverride, setActiveOverride] = useState(0)
     const [modal, setModal] = useState(null)
     const [confirmLoading, setConfirmLoading] = useState(false)
     const [assetField, setAssetField] = useState("")
+    const [overwritable, setOverwritable] = useState(defaultOverwritable)
+    const [changesMade, setChangesMade] = useState(false)
+
+    function useInterval(callback, delay) {
+        const savedCallback = useRef();
+      
+        // Remember the latest callback.
+        useEffect(() => {
+          savedCallback.current = callback;
+        }, [callback]);
+      
+        // Set up the interval.
+        useEffect(() => {
+          function tick() {
+            savedCallback.current();
+          }
+          if (delay !== null) {
+            let id = setInterval(tick, delay);
+            return () => clearInterval(id);
+          }
+        }, [delay]);
+      }
+
+    useEffect(() => {
+        const fullJson = {
+            "campaign": campaign,
+            "databash_hash": strategyHash,
+            "parameters": parameters,
+            "decisioning": strategies
+        }
+        sessionStorage.setItem("innovid-smart-strategy", JSON.stringify(fullJson))
+        setChangesMade(true)
+    }, [strategies, campaign])
+
+    
+
+
 
     function handleDefineAssetTypes(type) {
         const assetTypesCopy = [...assetTypes];
@@ -77,14 +113,14 @@ const StrategyGeneration = (props) => {
 
 
 
-
     function addStrategyHandler() {
         const strategiesCopy = [...strategies]
         const tempObj = {
             version_id: "pending",
-            version_name: "pending",
+            version_name: "",
             rules: [{}],
-            assets: {}
+            assets: {},
+            editingName: true
         }
         if (assetTypes[0]) {
             for (const assetType of assetTypes) {
@@ -94,8 +130,9 @@ const StrategyGeneration = (props) => {
 
         strategiesCopy.splice(strategiesCopy.length - 1, 0, tempObj)
         setStrategies(strategiesCopy)
-
     }
+
+
 
     function temperatureValidate(arr) {
         const operatorOne = arr[0][0]
@@ -162,6 +199,8 @@ const StrategyGeneration = (props) => {
 
     }
 
+
+
     function timeValidate(arr) {
         const operatorOne = arr[0][0]
         const valueOne = new Date()
@@ -226,10 +265,6 @@ const StrategyGeneration = (props) => {
         return true;
 
     }
-
-
-
-
     function dateValidate(arr) {
         const operatorOne = arr[0][0]
         const valueOne = new Date(arr[0][1])
@@ -290,14 +325,47 @@ const StrategyGeneration = (props) => {
         return true;
 
     }
-
     const validationFunctions = {
         "date": dateValidate,
         "temperature": temperatureValidate
     }
-
-    async function submissionValidation() {
-        const hash = randomstring.generate(6);
+    function verifyOverrite () {
+        if (overwritable) {
+            console.log('alksjdlkjfasd')
+            setModal({
+                custom: 1,
+                content:  <Modal
+                visible={true}
+                footer={[
+                    <Button key="new" onClick={() => {
+                        setModal(null)
+                    }}>
+                        Cancel
+                    </Button>,
+                  <Button key="new" type="primary" onClick={() => {
+                      const hash = randomstring.generate(6)
+                      submissionValidation(hash)
+                  }}>
+                    Publish New Strategy
+                  </Button>,
+                  <Button key="overrite" type="danger" onClick={() => {
+                      submissionValidation(strategyHash)
+                  }}>
+                    Overwrite Strategy ({strategyHash})
+                  </Button>,
+                ]}
+              >
+                <p>Would you like to publish a new strategy or overrite the existing one ({strategyHash})? Please exert caution when overwriting live strategies </p>
+                
+              </Modal>
+            })
+        }
+        else {
+            submissionValidation(strategyHash)
+        }
+        
+    }
+    async function submissionValidation(hash) {
         const tempErrors = [];
         const tempWarnings = [];
         if (!campaign || isNaN(parseInt(campaign))) {
@@ -451,49 +519,6 @@ const StrategyGeneration = (props) => {
 
     }
 
-    function validateDatabasHash(e) {
-        if (e.target.value === "" || e.target.value.length <= 2) {
-            setDatabaseHash("")
-            setHashValidate("")
-            setValidateMessage("")
-        }
-        else {
-            e.persist()
-            setHashValidate("validating")
-            setValidateMessage('Validating the Hash')
-            clearTimeout(timeout)
-            setTheTimeout(setTimeout(function () {
-                axios.get("http://services.innovid.com/getStrategy?hash=" + e.target.value)
-                    .then(({ data }) => {
-                        if (data.status == "success") {
-                            setDatabaseHash(e.target.value)
-                            setStrategies(data.json.decisioning)
-                            setParameters(data.json.parameters)
-                            setAssetTypes(Object.keys(data.json.decisioning[0].assets))
-                            if (data.json.campaign) {
-                                setCampaign(data.json.campaign)
-                            }
-                            // setCampaign(data.config.campaign)
-                            setHashValidate("success")
-                            setValidateMessage("Hash Validated. View your strategy below")
-                        }
-                        else {
-                            setHashValidate("error")
-                            setValidateMessage("No configuration file found. Please enter a valid hash")
-
-                        }
-                    })
-                    .catch(err => {
-
-                        setHashValidate("error")
-                        setValidateMessage("something went wrong, refresh your browser or try again later")
-                    })
-
-            }, 500));
-        }
-
-    }
-
     async function generateVersionIds(hash) {
         if (!campaign) {
             setModal({
@@ -536,7 +561,7 @@ const StrategyGeneration = (props) => {
                     "Version IDs Generated!"
                 ]
             })
-            setDatabaseHash(hash)
+            setStrategyHash(hash)
             setStrategies(strategiesCopy)
         }
     }
@@ -553,7 +578,19 @@ const StrategyGeneration = (props) => {
             .then(response => {
                 console.log(response)
                 setConfirmLoading(false)
-                setUrlResponse(response.data.message)
+                const tempArr = [];
+                // tempObj[assetType] = `http://services.innovid.com/strategyDeploy?hash=${req.query.hash}&assetType=${assetType}`;
+                for (const [index, assetType] of Object.keys(response.data.message).entries()) {
+                    const tempObj = {};
+                    tempObj.key = index + 1;
+                    tempObj.assetType = assetType;
+                    tempObj.dynamicLink = response.data.message[assetType]
+                    tempObj.action = response.data.message[assetType]
+                    tempArr.push(tempObj)
+                }
+                setOverwritable(true)
+                setUrlResponse(tempArr)
+                setChangesMade(false)
 
             })
     }
@@ -621,7 +658,7 @@ const StrategyGeneration = (props) => {
             if (modal["errors"]) {
                 return (
                     <Modal
-                        title="Title"
+                        title="Errors"
                         visible={modal}
                         onOk={modalErrorHandler}
                         onCancel={modalErrorHandler}
@@ -638,7 +675,7 @@ const StrategyGeneration = (props) => {
             else if (modal["submit"]) {
                 return (
                     <Modal
-                        title="Title"
+                        title="Submit"
                         visible={modal}
                         onOk={handleSubmitStrategy}
                         confirmLoading={confirmLoading}
@@ -656,7 +693,7 @@ const StrategyGeneration = (props) => {
 
                 return (
                     <Modal
-                        title="Title"
+                        title="Submit"
                         visible={modal}
                         footer={[
                             <Button key="submit" type="primary" loading={confirmLoading} onClick={() => { setModal(null) }}>
@@ -676,7 +713,7 @@ const StrategyGeneration = (props) => {
             else if (modal["warning"]) {
                 return (
                     <Modal
-                        title="Title"
+                        title="Warning!"
                         visible={modal}
                         onOk={() => {
                             modal["onOk"](...modal["params"])
@@ -688,17 +725,38 @@ const StrategyGeneration = (props) => {
                                 return <li>{warning}</li>
                             })}
                         </ul>
+                       
                     </Modal>
                 )
+            }
+            else if (modal["custom"]) {
+                return modal["content"]
             }
         }
 
     }
 
-    const assetProps = {
-
-
-    }
+    const columns = [
+        {
+          title: 'Asset Type',
+          dataIndex: 'assetType',
+          key: 'assetType',
+          render: text => <Tag>{text}</Tag>
+        },
+        {
+          title: 'Dynamic Link',
+          dataIndex: 'dynamicLink',
+          key: 'dynamicLink',
+        },
+        {
+          title: 'Action',
+          dataIndex: 'action',
+          key: 'action',
+          render: text => <Button onClick={() => {
+              copy(text)
+          }}>Copy to Clipboard</Button>
+        }
+    ]
 
     const [plus, setPlus] = useState("")
 
@@ -707,8 +765,41 @@ const StrategyGeneration = (props) => {
     return (
 
         <div className="app-container">
+
             {showModal(modal)}
-            {!campaign ? (<div className="campaign-edit"><Search placeholder="Enter The Campaign ID" onSearch={(value) => { setCampaign(value) }} enterButton="Submit"></Search></div>) : <div className="version-name"><div>Campaign: {campaign}</div><div><Button onClick={() => { setCampaign(null) }}>Edit</Button></div></div>}
+            <h1>Strategy Hash: {strategyHash} </h1>
+            {!campaign ? (<div className="campaign-edit"><Search placeholder="Enter The Campaign ID" onSearch={(value) => { setCampaign(value) }} enterButton="Submit"></Search></div>) : <div className="campaign-enter"><div className="campaign-id">Campaign: {campaign}</div><div><Button onClick={() => { 
+                if (overwritable) {
+                    setModal({
+                        custom: 1,
+                        content: <Modal
+                        visible={true}
+                        footer={[
+                            <Button key="new" onClick={() => {
+                                setModal(null)
+                            }}>
+                                Cancel
+                            </Button>,
+                            <div className="campaign-edit"><Search placeholder="Enter The Campaign ID" onSearch={(value) => { 
+
+                                setCampaign(value)
+                                setOverwritable(false)
+                                setStrategyHash(randomstring.generate(6))
+                                setModal(null)
+                            }} enterButton="Submit"></Search></div>
+                        ]}
+                      >
+                        <p>Enter the Campaign you would like to duplicate this strategy to below. Note that this action will automatically create a new Strategy under a new strategy hash</p>
+                        
+                      </Modal>
+                    })
+                }
+                else {
+                    setCampaign(null) 
+                }
+                
+
+                }}>{overwritable ? "Duplicate to Another Campaign" : "Edit"}</Button></div></div>}
             {
                 <div className="asset-types-container"><Card
                     
@@ -757,7 +848,7 @@ const StrategyGeneration = (props) => {
                                     setModal(null)
                                 },
                                 params: [index],
-                                warnings: [<div>"Warning! Deleting the asset type " + <strong>{assetTypes[index]}</strong> + " will delete the asset type for all versions. Are you sure you want to continue?"</div>]
+                                warnings: [<div>"Warning! Deleting the asset type "<strong>{assetTypes[index]}</strong>" will delete the asset type for all versions. Are you sure you want to continue?"</div>]
                             })
 
                         }}>
@@ -777,7 +868,7 @@ const StrategyGeneration = (props) => {
                                 return (
                                     <Panel key={strategyIndex} header={<div onClick={() => {
                                         setActiveOverride(strategyIndex)
-                                    }} className="flex-space"><div>Version ID: {strategy["version_id"]}</div><div>{strategy["editingName"] ? (<Search onSearch={(value) => { handleChangeVersionName(strategyIndex, value) }} enterButton="change"></Search>) : <div className="version-name"><div>Version Name: {strategy["version_name"]}</div><div><Button disabled={(strategy["version_name"].indexOf("default") >= 0)} onClick={() => { editStrategyName(strategyIndex) }}>Edit</Button></div></div>} </div> <div><Button onClick={() => {
+                                    }} className="flex-space"><div>Version ID: {strategy["version_id"]}</div><div>{strategy["editingName"] ? (<div>Version Name: <Search onSearch={(value) => { handleChangeVersionName(strategyIndex, value) }} enterButton="update version name"></Search></div>) : <div className="version-name"><div>Version Name: {strategy["version_name"]}</div><div><Button disabled={(strategy["version_name"].indexOf("default") >= 0)} onClick={() => { editStrategyName(strategyIndex) }}>Edit</Button></div></div>} </div> <div><Button onClick={() => {
                                         addSubRule(strategyIndex)
                                     }} disabled={(strategy["version_name"].indexOf("default") >= 0)}>Add Rule<Icon type="plus" /></Button> <Button disabled={(strategy["version_name"].indexOf("default") >= 0)} onClick={() => {
                                         removeStrategyHandler(strategyIndex)
@@ -870,7 +961,7 @@ const StrategyGeneration = (props) => {
                                                                                         <div className="parameter-values">
                                                                                             <InputGroup compact>
                                                                                                 {selectAllOperators(strategyIndex, ruleIndex, param, definitionIndex, paramDefinition[0])}
-                                                                                                <TimePicker format="HH:mm" defaultValue={paramDefinition[1] ? moment(paramDefinition[1], "HH:mm") : moment("00:00", "HH:mm")} onChange={(time, timeString) => {
+                                                                                                <TimePicker format="HH:mm" defaultValue={paramDefinition[1] ? moment(paramDefinition[1], "HH:mm") : null} onChange={(time, timeString) => {
                                                                                                     addSubRuleParameterValue(strategyIndex, ruleIndex, param, definitionIndex, timeString)
                                                                                                 }} />
                                                                                             </InputGroup>
@@ -921,7 +1012,7 @@ const StrategyGeneration = (props) => {
                                         <Divider />
                                         <div className="asset-container"><h2>Assets</h2> {Object.keys(strategy["assets"]).map(assetType => {
                                             return (<div className="asset-item">
-                                                <div className="assetType-header">{assetType}:</div> {<div className="asset-input"><div className="asset-input-field"><Input placeholder="Enter a URL or upload an asset" 
+                                                <div className="assetType-header"><strong>Asset Type: </strong>{assetType}</div> {<div className="asset-input"><div className="asset-input-field"><Input placeholder="Enter a URL or upload an asset" 
                                                 onChange={(e) => {
                                                     const strategiesCopy = [...strategies];
                                                     strategiesCopy[strategyIndex]["assets"][assetType] = e.target.value
@@ -944,6 +1035,7 @@ const StrategyGeneration = (props) => {
                                                             message.error(`${info.file.name} file upload failed.`);
                                                         }
                                                         else {
+                                                            // console.log(new Buffer(info.file.originFileObj))
                                                             var formData = new FormData()
                                                             formData.append('file', info.file.originFileObj);
                                                             axios.post('http://services.innovid.com/uploadAsset', formData, {
@@ -978,15 +1070,14 @@ const StrategyGeneration = (props) => {
             <div id="add-rule"><div>Add Version</div> <div style={{ fontSize: "30px" }} >{<Icon onClick={() => { addStrategyHandler() }} type="plus-square" theme={plus} />}</div></div>
             <div className=".not-in"></div>
             <Divider />
-
-            {urlResponse ? <div> {Object.keys(urlResponse).map(assetType => {
-                return (<div>{assetType}: {urlResponse[assetType]}</div>)
-            })}<div>Strategy Hash: {databaseHash}</div>
-                <div className=".not-in"><Button onClick={() => {
-                    submissionValidation()
-                }}>Submit Strategy</Button></div> </div> : <div className=".not-in"><Button onClick={() => {
-                    submissionValidation()
-                }}>Submit Strategy</Button></div>}
+            
+            {
+                urlResponse ? <div> <h1>Dynamic Links</h1> <Table columns={columns} dataSource={urlResponse} pagination={false} /><div className=".not-in"><Button disabled={!changesMade} onClick={() => {
+                    verifyOverrite()
+                }}>Submit Strategy</Button></div></div> : <div className="submit-strategy"><Button type="primary" disabled={!changesMade} onClick={() => {
+                    verifyOverrite()
+                }}>Submit Strategy</Button></div>
+            }
 
         </div>)
 }
