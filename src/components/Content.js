@@ -35,13 +35,13 @@ const InnoContent = ({isLoading, isPageAvailable, userData}) => {
 
 const ContentLoader = (<div>Loading<Icon type="sync" spin style={{marginLeft: "5px"}}/></div>);
 
-const title = (<span><b>Strategy Generation Tool</b></span>);
+const title = (<span><b>Strategy Manager and Asset Rotator Tool (SMART)</b></span>);
 const CustomPageHeader = (
     <PageHeader title={title} style={{"textAlign": "left", "padding": 0}}>
         <div className="wrap">
             <div className="content">
                 <Paragraph>
-                    This tool can be used to create a custom strategy for CTV that cannot be made in CMT.
+                    This tool can be used to create a custom strategy and export dynamic links. Read more here: 
                 </Paragraph>
             </div>
         </div>

@@ -15,6 +15,7 @@ const Home = (props) => {
     const [validateMessage, setValidateMessage] = useState("")
     const [timeout, setTheTimeout] = useState(0);
     const [hashValidate, setHashValidate] = useState("")
+    const [overwritable, setOverwritable] = useState(false)
 
     useEffect(() => {
         if (sessionStorage.getItem("innovid-smart-strategy")) {
@@ -41,20 +42,36 @@ const Home = (props) => {
             setTheTimeout(setTimeout(function () {
                 let hash = "";
                 let url = false;
-                if (e.target.value.indexOf("?hash=")) {
+                if (e.target.value.indexOf("?hash=")>0) {
                     const index = e.target.value.indexOf("?hash=")
                     hash = e.target.value.substring(index+6, index+12);
                     url = true
                 }
                 else {
+                    console.log(e.target.value)
                     hash = e.target.value
+                
                 }
-
+                console.log(hash)
                 axios.get("http://services.innovid.com/getStrategy?hash=" + hash)
                     .then(({ data }) => {
                         if (data.status == "success") {
                             const newJson = {...data.json}
-                            newJson.strategyHash = e.target.value
+                            newJson.strategyHash = hash
+                            const tempArr = [];
+
+
+                            for (const [index, assetType] of Object.keys(newJson.decisioning[0].assets).entries()) {
+                                const urlResponse = {};
+                                urlResponse.key = index + 1;
+                                urlResponse.assetType = assetType;
+                                urlResponse.dynamicLink = `http://services.innovid.com/strategyDeploy?hash=${hash}&assetType=${assetType}`
+                                urlResponse.action = `http://services.innovid.com/strategyDeploy?hash=${hash}&assetType=${assetType}`
+                                tempArr.push(urlResponse)
+                            }
+
+                            
+                            newJson["urlResponse"] = tempArr
                             setTempJson(newJson)
                             setHashValidate("success")
                             if (url) {
@@ -97,8 +114,10 @@ const Home = (props) => {
                 </Form.Item><div className="submit-strategy-hash"><Button style={{"position": "relative", "top": "4px"}} disabled={!tempJson} onClick={()=> {
                     setCreateStrategy(true)
                     setJson({...tempJson})
+                    setOverwritable(true)
                     setHashValidate("")
                     setValidateMessage("")
+                    
                 }}>Submit</Button></div></div>
                 </div>                
         )
@@ -110,10 +129,11 @@ const Home = (props) => {
             {createStrategy ? <div className="back"><Button onClick={()=> {setCreateStrategy(false) 
                 setTempJson(null)
                 setJson(null)
+                setOverwritable(false)
                 sessionStorage.removeItem("innovid-smart-strategy");
                 }}>Start Over</Button></div> : <div></div>}
             <Divider/>
-            {createStrategy ? <StrategyGeneration json={json}/> : options()}
+            {createStrategy ? <StrategyGeneration overwritable={overwritable} json={json}/> : options()}
         </div>
         )
 }

@@ -27,6 +27,7 @@ const StrategyGeneration = (props) => {
     let defaultParameters = {};
     let defaultStrategyHash = randomstring.generate(6)
     let defaultOverwritable = false;
+    let defaultUrlResponse = null;
 
     if (props.json) {
         defaultStrategies = props.json.decisioning
@@ -39,7 +40,13 @@ const StrategyGeneration = (props) => {
         }
         if (props.json.strategyHash) {
             defaultStrategyHash = props.json.strategyHash
-            defaultOverwritable = true
+            
+        }
+        if (props.overwritable) {
+            defaultOverwritable = true;
+        }
+        if (props.json.urlResponse) {
+            defaultUrlResponse = props.json.urlResponse
         }
     }
 
@@ -48,7 +55,7 @@ const StrategyGeneration = (props) => {
     const [validateMessage, setValidateMessage] = useState("")
     const [timeout, setTheTimeout] = useState(0);
     const [hashValidate, setHashValidate] = useState("")
-    const [urlResponse, setUrlResponse] = useState(null)
+    const [urlResponse, setUrlResponse] = useState(defaultUrlResponse)
     const [campaign, setCampaign] = useState(defaultCampaign)
     const [strategyHash, setStrategyHash] = useState(defaultStrategyHash)
     const [assetTypes, setAssetTypes] = useState(defaultAssetTypes)
@@ -85,7 +92,8 @@ const StrategyGeneration = (props) => {
             "campaign": campaign,
             "databash_hash": strategyHash,
             "parameters": parameters,
-            "decisioning": strategies
+            "decisioning": strategies,
+            "strategyHash": strategyHash
         }
         sessionStorage.setItem("innovid-smart-strategy", JSON.stringify(fullJson))
         setChangesMade(true)
@@ -331,7 +339,6 @@ const StrategyGeneration = (props) => {
     }
     function verifyOverrite () {
         if (overwritable) {
-            console.log('alksjdlkjfasd')
             setModal({
                 custom: 1,
                 content:  <Modal
@@ -371,10 +378,13 @@ const StrategyGeneration = (props) => {
         if (!campaign || isNaN(parseInt(campaign))) {
             tempErrors.push("No campaign ID found. Please Enter the 5 digit Campaign ID associated with this strategy")
         }
-        for (const strategy of strategies) {
+        for (const [strategyIndex, strategy] of strategies.entries()) {
             for (const asset of (Object.keys(strategy.assets))) {
                 if (!strategy.assets[asset]) {
                     tempErrors.push(`Empty URL - Version: ${strategy["version_name"]}, Asset type: ${asset}`)
+                }
+                if (!strategy["version_name"]) {
+                    tempErrors.push("Empty Version name - Version at position " + strategyIndex + 1)
                 }
 
             }
@@ -816,8 +826,11 @@ const StrategyGeneration = (props) => {
                             setAssetField("")
                         }
                         else {
-                            handleDefineAssetTypes(value)
-                            setAssetField("")
+                            if (value.length > 0) {
+                                handleDefineAssetTypes(value)
+                                setAssetField("")
+                            }
+                            
                         }
 
                     }} enterButton="Submit"></Search></div></div>}
