@@ -97,6 +97,13 @@ const StrategyGeneration = (props) => {
         }
         sessionStorage.setItem("innovid-smart-strategy", JSON.stringify(fullJson))
         setChangesMade(true)
+        if (overwritable && sessionStorage.getItem("innovid-smart-strategy")) {
+            sessionStorage.setItem("innovid-smart-overwritable", true)
+        }
+        if (urlResponse) {
+            sessionStorage.setItem('innovid-smart-urlResponse', JSON.stringify(urlResponse))
+        }
+        
     }, [strategies, campaign])
 
     
@@ -442,13 +449,6 @@ const StrategyGeneration = (props) => {
             setConfirmLoading(false)
             setModal(null)
         }
-
-
-
-
-
-
-
     }
 
 
@@ -555,7 +555,7 @@ const StrategyGeneration = (props) => {
                 }
             }
             for (const strategy of strategiesCopy) {
-                if (strategy["version_name"] == "default") {
+                if (strategy["version_name"].indexOf("default") == 0) {
                     strategy["version_name"] = "default_" + hash
                 }
                 if (strategy["version_id"] = "generating... please wait") {
@@ -594,10 +594,16 @@ const StrategyGeneration = (props) => {
                     const tempObj = {};
                     tempObj.key = index + 1;
                     tempObj.assetType = assetType;
-                    tempObj.dynamicLink = response.data.message[assetType]
-                    tempObj.action = response.data.message[assetType]
+                    tempObj.dynamicLink = response.data.message[assetType] + "&dco_session_id=%7Bivc_dco_session_id%7D&dco_version_id=%7Bivc_dco_version_id%7D"
+                    tempObj.action = response.data.message[assetType] + "&dco_session_id=%7Bivc_dco_session_id%7D&dco_version_id=%7Bivc_dco_version_id%7D"
                     tempArr.push(tempObj)
                 }
+                const tempObj = {};
+                tempObj.key = tempArr.length + 1;
+                tempObj.assetType = "Version Report";
+                tempObj.dynamicLink = `http://services.innovid.com/strategyDeploy?hash=${hash}&assetType=versionReport&dco_session_id=%7Bivc_dco_session_id%7D&dco_version_id=%7Bivc_dco_version_id%7D`
+                tempObj.action = `http://services.innovid.com/strategyDeploy?hash=${hash}&assetType=versionReport&dco_session_id=%7Bivc_dco_session_id%7D&dco_version_id=%7Bivc_dco_version_id%7D`
+                tempArr.push(tempObj)
                 setOverwritable(true)
                 setUrlResponse(tempArr)
                 setChangesMade(false)
@@ -770,12 +776,8 @@ const StrategyGeneration = (props) => {
 
     const [plus, setPlus] = useState("")
 
-
-
     return (
-
         <div className="app-container">
-
             {showModal(modal)}
             <h1>Strategy Hash: {strategyHash} </h1>
             {!campaign ? (<div className="campaign-edit"><Search placeholder="Enter The Campaign ID" onSearch={(value) => { setCampaign(value) }} enterButton="Submit"></Search></div>) : <div className="campaign-enter"><div className="campaign-id">Campaign: {campaign}</div><div><Button onClick={() => { 
@@ -790,12 +792,26 @@ const StrategyGeneration = (props) => {
                             }}>
                                 Cancel
                             </Button>,
-                            <div className="campaign-edit"><Search placeholder="Enter The Campaign ID" onSearch={(value) => { 
+                            <div className="campaign-edit"><Search placeholder="Enter The Campaign ID" onSearch={(value) => {
 
                                 setCampaign(value)
                                 setOverwritable(false)
                                 setStrategyHash(randomstring.generate(6))
                                 setModal(null)
+                                const tempCopy = [...strategies]
+                                for (const strategy of tempCopy) {
+                                    strategy["version_id"] = "pending..."
+                                    if (strategy["version_name"].indexOf('default_') == 0) {
+                                        strategy["version_name"] = "default"
+                                    }
+                                }
+                                setStrategies(tempCopy)
+                                setUrlResponse(false)
+                                sessionStorage.removeItem("innovid-smart-strategy");
+                                sessionStorage.removeItem("innovid-smart-overwritable")
+                                sessionStorage.removeItem("innovid-smart-urlResponse")
+
+
                             }} enterButton="Submit"></Search></div>
                         ]}
                       >

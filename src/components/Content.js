@@ -41,7 +41,7 @@ const CustomPageHeader = (
         <div className="wrap">
             <div className="content">
                 <Paragraph>
-                    This tool can be used to create a custom strategy and export dynamic links. Read more here: 
+                    This tool can be used to create a custom strategy and export dynamic links. Read more here: https://innovidwiki.jira.com/wiki/spaces/CREAT/pages/1199538553/Strategy+Manager+and+Asset+Rotator+Tool+SMART
                 </Paragraph>
             </div>
         </div>

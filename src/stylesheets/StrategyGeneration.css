@@ -8,6 +8,10 @@
     right: 3px;
 }
 
+tbody tr td {
+    font-size: 12px
+}
+
 #add-rule {
     display: flex;
     align-items: center;

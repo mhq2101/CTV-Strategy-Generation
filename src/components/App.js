@@ -18,6 +18,7 @@ const App = (props) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isPageAvailable, setIsPageAvailable] = useState(true);
     const [headerTitle, setHeaderTitle] = useState('');
+    const [version, setVersion] = useState("")
 
     useEffect(() => {
         props.getAuth(resolveUserData());
@@ -29,9 +30,11 @@ const App = (props) => {
                 setIsLoading(false)
                 setIsPageAvailable(data.data.isPageActive)
                 setHeaderTitle(data.data.headerTitle || '')
+                setVersion(data.data.version)
                 document.title = data.data.headerTitle || '';
             });
     }, [])
+    
 
     useEffect(() => {
         setStripped(resolveStripped)
@@ -41,7 +44,7 @@ const App = (props) => {
         <div className="App">
             <InnoHeader stripped={stripped} headerTitle={headerTitle} userData={props.auth}/>
             <InnoContent isLoading={isLoading} isPageAvailable={isPageAvailable} userData={props.auth}/>
-            <InnoFooter stripped={stripped}/>
+            <InnoFooter stripped={stripped} version={version}/>
         </div>
     );
 }
